@@ -1,6 +1,7 @@
 const router = require('koa-router')();
 const Dbview = require('../../models/dbview');
 const _ = require('lodash');
+
 /**
  * @api {get} /api/dataall/:view_name Get data all by table name
  * @apiVersion 1.0.0
