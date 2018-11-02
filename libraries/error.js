@@ -31,9 +31,7 @@ exports.Unauthorized = class Unauthorized extends ExtendableError {
   constructor(message) {
     super(message);
     this.body = {
-      errors: [{
-        message,
-      }],
+      errors: message,
     };
     this.status = 401;
   }
@@ -43,9 +41,7 @@ exports.Forbidden = class Unauthorized extends ExtendableError {
   constructor(message) {
     super(message);
     this.body = {
-      errors: [{
-        message,
-      }],
+      errors: message,
     };
     this.status = 403;
   }

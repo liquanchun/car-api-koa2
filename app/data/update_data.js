@@ -1,5 +1,6 @@
 const router = require('koa-router')();
 const Dbview = require('../../models/dbview');
+const Parameter = require('../../libraries/parameter');
 const _ = require('lodash');
 /**
  * @api {post} /api/data/:view_name Add/Update data
@@ -37,29 +38,7 @@ router.post('/api/data/:view_name', async (ctx) => {
  * @apiSampleRequest /api/delete/:view_name
  */
 router.post('/api/delete/:view_name', async (ctx) => {
-  const keys = _.keys(ctx.request.body);
-  const keyword = [];
-  const keysql = [];
-  const values = [];
-  keys.forEach((k) => {
-    if (ctx.request.body[k]) {
-      if (k.includes('-')) {
-        const kw = k.split('-')[0];
-        if (keyword.includes(kw)) {
-          keysql.push(k.split('-')[0] + ' <= ?');
-        } else {
-          keysql.push(k.split('-')[0] + ' >= ?');
-        }
-        keyword.push(kw);
-      } else {
-        keyword.push(k);
-        keysql.push(k + ' = ?');
-      }
-      values.push(ctx.request.body[k]);
-    }
-  });
-
-  let raw = _.join(keysql, ' and ');
+  const [raw, values] = Parameter.resolve(ctx.request.body);
   ctx.body = {
     ViewName: ctx.params.view_name,
     Data: await Dbview.deleteByWhere(ctx.params.view_name, raw, values),
@@ -74,29 +53,7 @@ router.post('/api/delete/:view_name', async (ctx) => {
  * @apiSampleRequest /api/deleteall/:view_name
  */
 router.post('/api/deleteall/:view_name', async (ctx) => {
-  const keys = _.keys(ctx.request.body);
-  const keyword = [];
-  const keysql = [];
-  const values = [];
-  keys.forEach((k) => {
-    if (ctx.request.body[k]) {
-      if (k.includes('-')) {
-        const kw = k.split('-')[0];
-        if (keyword.includes(kw)) {
-          keysql.push(k.split('-')[0] + ' <= ?');
-        } else {
-          keysql.push(k.split('-')[0] + ' >= ?');
-        }
-        keyword.push(kw);
-      } else {
-        keyword.push(k);
-        keysql.push(k + ' = ?');
-      }
-      values.push(ctx.request.body[k]);
-    }
-  });
-
-  let raw = _.join(keysql, ' and ');
+  const [raw, values] = Parameter.resolve(ctx.request.body);
   ctx.body = {
     ViewName: ctx.params.view_name,
     Data: await Dbview.deleteAllByWhere(ctx.params.view_name, raw, values),

@@ -10,14 +10,14 @@ module.exports = async (ctx, next) => {
     try {
       const decoded = jwt.verify(token, config.secret);
       const user = await User.findOne({
-        id: decoded.id,
+        userid: decoded.userid,
       });
 
-      if (user && user.id) {
+      if (user && user.userid) {
         ctx.currentUser = user;
         await next();
       } else {
-        throw new Unauthorized('Missing User');
+        throw new Unauthorized('无效的用户。');
       }
     } catch (err) {
       if (err.name === 'TokenExpiredError') {

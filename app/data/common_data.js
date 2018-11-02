@@ -1,49 +1,20 @@
 const router = require('koa-router')();
 const Dbview = require('../../models/dbview');
+const Parameter = require('../../libraries/parameter');
+
 const _ = require('lodash');
 /**
  * @api {post} /get data list
  * @apiVersion 1.0.0
- * @apiGroup DataBase
+ * @apiGroup CommonData
  * @apiName Datalist
- * @apiParam {String{1,255}} email user email
- * @apiParam {String{1,20}} password user password
  * @apiSampleRequest /api/select
  */
 router.post('/api/select', async (ctx) => {
-  const user = ctx.request.body.user;
-  const view = ctx.request.body.view;
-  const table = ctx.request.body.table;
-  const paras = ctx.request.body.paras;
+  const { user, view, table, paras, andor } = ctx.request.body;
 
   const viewname = view || table;
-  const keys = _.keys(paras);
-  const keyword = [];
-  const keysql = [];
-  const values = [];
-  keys.forEach((k) => {
-    if (paras[k]) {
-      if (k.includes('-')) {
-        const kw = k.split('-')[0];
-        if (keyword.includes(kw)) {
-          keysql.push(`${k.split('-')[0]} <= ?`);
-        } else {
-          keysql.push(`${k.split('-')[0]} >= ?`);
-        }
-        keyword.push(kw);
-      } else {
-        keyword.push(k);
-        keysql.push(`${k} = ?`);
-      }
-      values.push(paras[k]);
-    }
-  });
-  const hasvaild = Dbview.hasvaild(viewname);
-  if (hasvaild) {
-    keysql.push('isvalid');
-    values.push(1);
-  }
-  const raw = _.join(keysql, ' and ');
+  const [raw, values] = Parameter.resolve(paras, andor);
   ctx.body = {
     ViewName: viewname,
     Data: await Dbview.getDataListByWhere(viewname, raw, values),
@@ -53,16 +24,12 @@ router.post('/api/select', async (ctx) => {
 /**
  * @api {post} /Edit data
  * @apiVersion 1.0.0
- * @apiGroup DataBase
+ * @apiGroup CommonData
  * @apiName Edit Data
- * @apiParam {String{1,255}} email user email
- * @apiParam {String{1,20}} password user password
  * @apiSampleRequest /api/update
  */
 router.post('/api/update', async (ctx) => {
-  const user = ctx.request.body.user;
-  const table = ctx.request.body.table;
-  const paras = ctx.request.body.paras;
+  const { user, table, paras } = ctx.request.body;
 
   if (!paras.Id) {
     ctx.body = await Dbview.addData(table, paras);
@@ -86,39 +53,21 @@ router.post('/api/update', async (ctx) => {
  * @api {post} /api/delete Delete data by post params
  * @apiVersion 1.0.0
  * @apiName Delete Data By Where
- * @apiGroup DataBase
+ * @apiGroup CommonData
  * @apiSampleRequest /api/delete
  */
 router.post('/api/delete', async (ctx) => {
-  const user = ctx.request.body.user;
-  const table = ctx.request.body.table;
-  const paras = ctx.request.body.paras;
+  const { user, table, paras, remove, andor } = ctx.request.body;
+  const [raw, values] = Parameter.resolve(paras, andor);
 
-  const keys = _.keys(ctx.request.body);
-  const keyword = [];
-  const keysql = [];
-  const values = [];
-  keys.forEach((k) => {
-    if (paras[k]) {
-      if (k.includes('-')) {
-        const kw = k.split('-')[0];
-        if (keyword.includes(kw)) {
-          keysql.push(k.split('-')[0] + ' <= ?');
-        } else {
-          keysql.push(k.split('-')[0] + ' >= ?');
-        }
-        keyword.push(kw);
-      } else {
-        keyword.push(k);
-        keysql.push(k + ' = ?');
-      }
-      values.push(paras[k]);
-    }
-  });
-
-  let raw = _.join(keysql, ' and ');
+  let result = 0;
+  if (remove) {
+    result = await Dbview.deleteallByWhere(table, raw, values);
+  } else {
+    result = await Dbview.deleteByWhere(table, raw, values);
+  }
   ctx.body = {
     ViewName: table,
-    Data: await Dbview.deleteByWhere(table, raw, values),
+    Data: result,
   };
 });

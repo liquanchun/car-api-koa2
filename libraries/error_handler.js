@@ -12,10 +12,7 @@ module.exports = async (ctx, next) => {
     } else {
       ctx.status = 500;
       ctx.body = {
-        errors: [{
-          message: err.message,
-          stack: err.stack, // remove in production
-        }],
+        errors: err.message,
       };
     }
     logger.error(err.message);

@@ -2,6 +2,7 @@ const Koa = require('koa');
 const fs = require('fs');
 const path = require('path');
 const errorHandler = require('./libraries/error_handler');
+const auth = require('./middlewares/auth');
 const cors = require('koa-cors');
 const config = require('./env');
 const logger = require('./libraries/log4');
@@ -61,6 +62,9 @@ app.use(errorHandler);
 
 // validator
 require('koa-validate')(app);
+
+// 用户认证
+// app.use(auth);
 
 // set routes
 fs.readdirSync('./app').filter(file => fs.statSync(path.join('./app', file)).isDirectory()).map((moduleName) => {

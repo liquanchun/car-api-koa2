@@ -1,5 +1,6 @@
 const router = require('koa-router')();
 const Dbview = require('../../models/dbview');
+const Parameter = require('../../libraries/parameter');
 const _ = require('lodash');
 
 /**
@@ -14,48 +15,6 @@ router.get('/api/dataall/:view_name', async (ctx) => {
   ctx.body = {
     ViewName: ctx.params.view_name,
     Data: await Dbview.getDataList(ctx.params.view_name),
-  };
-});
-
-/**
- * @api {post} /api/databywhere/:view_name Get data list by post params
- * @apiVersion 1.0.0
- * @apiName Get data by where
- * @apiGroup DataBase
- * @apiSampleRequest /api/databywhere/:view_name
- */
-router.post('/api/databywhere/:view_name', async (ctx) => {
-  ctx.checkParams('view_name').notEmpty('view_name is required');
-  const keys = _.keys(ctx.request.body);
-  const keyword = [];
-  const keysql = [];
-  const values = [];
-  keys.forEach((k) => {
-    if (ctx.request.body[k]) {
-      if (k.includes('-')) {
-        const kw = k.split('-')[0];
-        if (keyword.includes(kw)) {
-          keysql.push(`${k.split('-')[0]} <= ?`);
-        } else {
-          keysql.push(`${k.split('-')[0]} >= ?`);
-        }
-        keyword.push(kw);
-      } else {
-        keyword.push(k);
-        keysql.push(`${k} = ?`);
-      }
-      values.push(ctx.request.body[k]);
-    }
-  });
-  const hasvaild = Dbview.hasvaild(ctx.params.view_name);
-  if (hasvaild) {
-    keysql.push('isvalid');
-    values.push(1);
-  }
-  const raw = _.join(keysql, ' and ');
-  ctx.body = {
-    ViewName: ctx.params.view_name,
-    Data: await Dbview.getDataListByWhere(ctx.params.view_name, raw, values),
   };
 });
 
@@ -157,33 +116,9 @@ router.post('/api/datapage/:view_name/:pagesize/:pageindex', async (ctx) => {
   ctx.checkParams('pagesize').notEmpty('pagesize is required');
   ctx.checkParams('pageindex').notEmpty('pageindex is required');
 
-  const keys = _.keys(ctx.request.body);
-  const keyword = [];
-  const keysql = [];
-  const values = [];
-  keys.forEach((k) => {
-    if (ctx.request.body[k]) {
-      if (k.includes('-')) {
-        const kw = k.split('-')[0];
-        if (keyword.includes(kw)) {
-          keysql.push(`${k.split('-')[0]} <= ?`);
-        } else {
-          keysql.push(`${k.split('-')[0]} >= ?`);
-        }
-        keyword.push(kw);
-      } else {
-        keyword.push(k);
-        keysql.push(`${k} = ?`);
-      }
-      values.push(ctx.request.body[k]);
-    }
-  });
-  const hasvaild = Dbview.hasvaild(ctx.params.view_name);
-  if (hasvaild) {
-    keysql.push('isvalid');
-    values.push(1);
-  }
-  const raw = _.join(keysql, ' and ');
+  const { user, paras, andor } = ctx.request.body;
+
+  const [raw, values] = Parameter.resolve(paras, andor);
 
   const datacnt = await Dbview.dataCount(ctx.params.view_name);
   ctx.body = {

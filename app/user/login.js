@@ -11,32 +11,25 @@ const string = require('../../libraries/string');
  * @apiVersion 1.0.0
  * @apiGroup Auth
  * @apiName UserLogin
- * @apiParam {String{1,255}} email user email
+ * @apiParam {String{1,255}} userid user userid
  * @apiParam {String{1,20}} password user password
  * @apiSampleRequest /login
  */
 router.post('/api/login', async (ctx) => {
-  ctx.checkBody('email').notEmpty('Email field is required').len(4, 50, 'Email length must be between 4 and 50 characters');
+  ctx.checkBody('userid').notEmpty('userid field is required').len(4, 50, 'userid length must be between 4 and 50 characters');
   ctx.checkBody('password').notEmpty('Password field is required').len(4, 20, 'Password length must be between 4 and 20 characters');
 
   if (ctx.errors) throw new BadRequest(ctx.errors);
 
   const user = await User.findOne({
-    email: ctx.request.body.email,
+    userid: ctx.request.body.userid,
     password: string.generatePasswordHash(ctx.request.body.password),
   });
 
-  if (!user) throw new Unauthorized('Invalid Credentials');
+  if (!user) throw new Unauthorized('Invalid User Id');
 
-  ctx.body = {
-    id: user.id,
-    first_name: user.first_name,
-    last_name: user.last_name,
-    email: user.email,
-    user_name: user.user_name,
-    country_id: user.country_id,
-    token: jwt.encode({ id: user.id }),
-  };
+  user.token = jwt.encode({ id: user.id });
+  ctx.body = user;
 });
 
 module.exports = router;
