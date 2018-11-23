@@ -76,3 +76,5 @@ exports.deleteByWhere =
 // 根据多条件 彻底删除数据
 exports.deleteallByWhere =
   (viewname, wherekey, wherevalue) => knex(viewname).whereRaw(wherekey, wherevalue).del();
+
+exports.gettablelist = sql => knex.raw(sql);

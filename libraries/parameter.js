@@ -18,7 +18,7 @@ exports.resolve = (paras, andor = 'and') => {
         keyword.push(kw);
       } else {
         keyword.push(k);
-        keysql.push(`${k} = ?`);
+        keysql.push(`${k} like ?`);
       }
       values.push(paras[k]);
     }

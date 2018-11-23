@@ -63,9 +63,6 @@ app.use(errorHandler);
 // validator
 require('koa-validate')(app);
 
-// 用户认证
-// app.use(auth);
-
 // set routes
 fs.readdirSync('./app').filter(file => fs.statSync(path.join('./app', file)).isDirectory()).map((moduleName) => {
   fs.readdirSync(`./app/${moduleName}`).filter(file => fs.statSync(path.join(`./app/${moduleName}`, file)).isFile()).map((route) => {

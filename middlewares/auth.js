@@ -4,6 +4,10 @@ const config = require('../env').jwt;
 const { Unauthorized } = require('../libraries/error');
 
 module.exports = async (ctx, next) => {
+  // 如果是用户登录，则不验证权限
+  if (ctx.url.includs('login')) {
+    await next();
+  }
   const { header: { token } } = ctx;
 
   if (token) {

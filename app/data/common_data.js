@@ -2,7 +2,37 @@ const router = require('koa-router')();
 const Dbview = require('../../models/dbview');
 const Parameter = require('../../libraries/parameter');
 
-const _ = require('lodash');
+/**
+ * @api {get} /api/column/:table Get column by table name
+ * @apiVersion 1.0.0
+ * @apiGroup DataBase
+ * @apiName Get column List
+ * @apiSampleRequest /api/column/:table
+ */
+router.get('/api/column/:table', async (ctx) => {
+  ctx.checkParams('table').notEmpty('table is required');
+  const { table } = ctx.params;
+  const sql = `select table_name,column_name,data_type,column_comment from information_schema.columns where table_schema='car_app' and column_name not in('Id','IsValid','UpdateTime','DmsCode') and table_name='${table}'`;
+  const data = await Dbview.gettablelist(sql);
+  ctx.body = {
+    Data: data[0],
+  };
+});
+
+/**
+ * @api {get} /api/tablelist Get database table list
+ * @apiVersion 1.0.0
+ * @apiGroup DataBase
+ * @apiName Get table List
+ * @apiSampleRequest /api/tablelist
+ */
+router.get('/api/tablelist', async (ctx) => {
+  const sql = "select table_name,table_comment from information_schema.tables where table_schema='car_app' and table_type='base table'";
+  const data = await Dbview.gettablelist(sql);
+  ctx.body = {
+    Data: data[0],
+  };
+});
 /**
  * @api {post} /get data list
  * @apiVersion 1.0.0
@@ -11,7 +41,7 @@ const _ = require('lodash');
  * @apiSampleRequest /api/select
  */
 router.post('/api/select', async (ctx) => {
-  const { user, view, table, paras, andor } = ctx.request.body;
+  const { view, table, paras, andor } = ctx.request.body;
 
   const viewname = view || table;
   const [raw, values] = Parameter.resolve(paras, andor);
@@ -29,7 +59,7 @@ router.post('/api/select', async (ctx) => {
  * @apiSampleRequest /api/update
  */
 router.post('/api/update', async (ctx) => {
-  const { user, table, paras } = ctx.request.body;
+  const { table, paras } = ctx.request.body;
 
   if (!paras.Id) {
     ctx.body = await Dbview.addData(table, paras);
@@ -57,7 +87,7 @@ router.post('/api/update', async (ctx) => {
  * @apiSampleRequest /api/delete
  */
 router.post('/api/delete', async (ctx) => {
-  const { user, table, paras, remove, andor } = ctx.request.body;
+  const { table, paras, remove, andor } = ctx.request.body;
   const [raw, values] = Parameter.resolve(paras, andor);
 
   let result = 0;
@@ -71,3 +101,5 @@ router.post('/api/delete', async (ctx) => {
     Data: result,
   };
 });
+
+module.exports = router;
